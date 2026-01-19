@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,7 +54,7 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
             }
             String results = intent.getStringExtra("resultsAutocomplete");
             if (results != null) {
-                editText.setText(results);
+                Toast.makeText(getApplicationContext(), results, Toast.LENGTH_LONG).show();
             }
         }
     };
