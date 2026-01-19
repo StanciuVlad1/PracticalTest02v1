@@ -1,6 +1,9 @@
 package ro.pub.cs.systems.eim.practicaltest02v10;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -40,6 +44,37 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
 
     private OkHttpClient okHttpClient;
 
+    private EditText editText;
+    private final BroadcastReceiver autoCompleteReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent ==null) {
+                return;
+            }
+            String results = intent.getStringExtra("resultsAutocomplete");
+            if (results != null) {
+                editText.setText(results);
+            }
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        ContextCompat.registerReceiver(
+                this,
+                autoCompleteReceiver,
+                new IntentFilter("AUTOCOMPLETE_RESULTS"),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+        );
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(autoCompleteReceiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +93,8 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
         btnConnectClient = findViewById(R.id.btnConnectClient);
 
         textView = findViewById(R.id.textView);
+
+        editText = findViewById(R.id.insertWord);
 
         btnStartServer.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,7 +118,7 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             okHttpClient = new OkHttpClient();
-            String url = "https://www.google.com/complete/search?client=chrome&q=" + textView.getText().toString();
+            String url = "https://www.google.com/complete/search?client=chrome&q=" + editText.getText().toString();
             Request request = new Request.Builder().url(url).build();
             try {
                 Response response = okHttpClient.newCall(request).execute();
@@ -138,13 +175,11 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
                     Socket socket = serverSocket.accept();
                     count++;
                     Log.d("TAG","Client s-a conectat");
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            textView.setText("Client " + count + " connected with address : " + socket.getInetAddress());
-//                        }
-//                    });
                     ;
+
+                    Runnable runnable = new HttpThread();
+                    new Thread(runnable).start();
+
 
                     PrintWriter output_Server = new PrintWriter(socket.getOutputStream());
                     output_Server.write("Welcome to Server: " + count);
