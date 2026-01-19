@@ -115,44 +115,12 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
 
     }
 
-    private class HttpThread implements Runnable {
-        @Override
-        public void run() {
-            okHttpClient = new OkHttpClient();
-            String url = "https://www.google.com/complete/search?client=chrome&q=" + editText.getText().toString();
-            Request request = new Request.Builder().url(url).build();
-            try {
-                Response response = okHttpClient.newCall(request).execute();
-                if(response.isSuccessful() && response.body()!=null) {
-                    String jsonResponse = response.body().string();
-                    JSONArray jsonObject = new JSONArray(jsonResponse);
-                    var values = jsonObject.getJSONArray(1);
-                    Log.d("TAG", jsonObject.toString());
-                    Log.d("TAG",jsonResponse);
-                    Log.d("TAG",values.toString());
-                    StringBuilder result = new StringBuilder("");
-                    for(int i = 0 ; i < values.length(); i++) {
-                        Log.d("TAG",values.getString(i));
-                        result.append( i + ") " + values.getString(i) + "\n");
-                    }
-                    Intent intent = new Intent("AUTOCOMPLETE_RESULTS");
-                    intent.setPackage(getPackageName());
-                    intent.putExtra("resultsAutocomplete", result.toString());
-                    sendBroadcast(intent); // din Activity (inner class) merge
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            resultText.setText(result.toString());
-//                        }
-//                    });
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
+//    private class HttpThread implements Runnable {
+//        @Override
+//        public void run() {
+//
+//        }
+//    }
 
     class ServerThread extends Thread implements Runnable {
         private boolean serverRunning;
@@ -178,12 +146,45 @@ public class PracticalTest02v1MainActivity extends AppCompatActivity {
                     Log.d("TAG","Client s-a conectat");
                     ;
 
-                    Runnable runnable = new HttpThread();
-                    new Thread(runnable).start();
+                    okHttpClient = new OkHttpClient();
+                    String url = "https://www.google.com/complete/search?client=chrome&q=" + editText.getText().toString();
+                    Request request = new Request.Builder().url(url).build();
+                    StringBuilder result2 = new StringBuilder("");
+                    try {
+                        Response response = okHttpClient.newCall(request).execute();
+                        if(response.isSuccessful() && response.body()!=null) {
+                            String jsonResponse = response.body().string();
+                            JSONArray jsonObject = new JSONArray(jsonResponse);
+                            var values = jsonObject.getJSONArray(1);
+                            Log.d("TAG", jsonObject.toString());
+                            Log.d("TAG",jsonResponse);
+                            Log.d("TAG",values.toString());
+                            StringBuilder result = new StringBuilder("");
+                            for(int i = 0 ; i < values.length(); i++) {
+                                Log.d("TAG",values.getString(i));
+                                result.append( i + ") " + values.getString(i) + "\n");
+                            }
+                            result2= result;
+                            Intent intent = new Intent("AUTOCOMPLETE_RESULTS");
+                            intent.setPackage(getPackageName());
+                            intent.putExtra("resultsAutocomplete", result.toString());
+                            sendBroadcast(intent); // din Activity (inner class) merge
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            resultText.setText(result.toString());
+//                        }
+//                    });
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
 
 
                     PrintWriter output_Server = new PrintWriter(socket.getOutputStream());
-                    output_Server.write("Welcome to Server: " + count);
+                    output_Server.write(result2.toString());
                     output_Server.flush();
 
                     socket.close();
